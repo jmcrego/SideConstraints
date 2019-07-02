@@ -121,7 +121,7 @@ class Model(object):
 
         return WORD2TAG
 
-    def inference(self, filename, p_any, str_any, ling):
+    def inference(self, filename, p_any, s_any, ling):
         WRD = []
         POS = []
         nsent = 0
@@ -129,7 +129,7 @@ class Model(object):
             line = line.rstrip()
             toks = line.split()
             if len(toks)==0: ### end of sentence
-                print(' '.join(self.sideConstraints(WRD, POS, p_any, str_any, ling)))
+                print(' '.join(self.sideConstraints(WRD, POS, p_any, s_any, ling)))
                 WRD = []
                 POS = []
                 nsent += 1
@@ -139,7 +139,7 @@ class Model(object):
             else:
                 sys.stderr.write('warning2: unparsed {} entry \'{}\'\n'.format(nsent,line))
 
-    def sideConstraints(self, WRD, POS, p_any, str_any, ling):
+    def sideConstraints(self, WRD, POS, p_any, s_any, ling):
         sideconstraints = []
         ### clusters
         set_of_nouns = Set()
@@ -170,24 +170,24 @@ class Model(object):
 
 
         if len(set_of_nouns)==1 and random.random() >= p_any: sideconstraints.append('<noun:{}>'.format(set_of_nouns.pop()))
-        else: sideconstraints.append('<noun:{}>'.format(str_any))
+        else: sideconstraints.append('<noun:{}>'.format(s_any))
 
         if len(set_of_verbs)==1 and random.random() >= p_any: sideconstraints.append('<verb:{}>'.format(set_of_verbs.pop()))
-        else: sideconstraints.append('<verb:{}>'.format(str_any))
+        else: sideconstraints.append('<verb:{}>'.format(s_any))
 
         if len(set_of_adjs)==1 and random.random() >= p_any:  sideconstraints.append('<adj:{}>'.format(set_of_adjs.pop()))
-        else: sideconstraints.append('<adj:{}>'.format(str_any))
+        else: sideconstraints.append('<adj:{}>'.format(s_any))
 
         if ling:
             mood = '0'
             if len(mood_of_verbs)==1: mood = mood_of_verbs.pop()
             if mood != '0' and random.random() > p_any: sideconstraints.append('<mood:{}>'.format(mood))
-            else: sideconstraints.append('<mood:{}>'.format(str_any))
+            else: sideconstraints.append('<mood:{}>'.format(s_any))
 
             tense = '0'
             if len(tense_of_verbs)==1: tense = tense_of_verbs.pop()
             if tense != '0' and random.random() > p_any: sideconstraints.append('<tense:{}>'.format(tense))
-            else: sideconstraints.append('<tense:{}>'.format(str_any))
+            else: sideconstraints.append('<tense:{}>'.format(s_any))
 
         return sideconstraints
 
@@ -198,7 +198,7 @@ class Model(object):
 if __name__ == '__main__':
 
     name = sys.argv.pop(0)
-    usage = '''{}  -i FILE [-m FILE] [-snoun INT] [-sverb INT] [-sadj INT] [-rnd] [-p FLOAT] [-ling] [-seed INT]
+    usage = '''{}  -i FILE [-m FILE] [-snoun INT] [-sverb INT] [-sadj INT] [-rnd] [-p_any FLOAT] [-s_any STRING] [-ling] [-seed INT]
        -i       FILE : input file with morphosyntactic analysis
 
    Learning Options
@@ -210,8 +210,8 @@ if __name__ == '__main__':
 
    Inference Options
        -m       FILE : model file
-       -p_any  FLOAT : probability of generating using 'X' (any) for tags (default 0.3)
-       -s_any STRING : use 'X' for tags meaning any tag (default X)
+       -s_any STRING : use STRING for tags without value (default 'X')
+       -p_any  FLOAT : probability of generating 'X' (any) tags (default 0.1)
        -ling         : use verb mood and tense costraints (default False)
 
 '''.format(name)
@@ -223,8 +223,8 @@ if __name__ == '__main__':
     sadj = 2
     ling = False
     frq_or_rnd = True
-    p_any = 0.3
-    str_any = 'X'
+    p_any = 0.1
+    s_any = 'X'
     seed = 1234
     while len(sys.argv):
         tok = sys.argv.pop(0)
@@ -234,7 +234,7 @@ if __name__ == '__main__':
         elif tok=="-sverb" and len(sys.argv): sverb = int(sys.argv.pop(0))
         elif tok=="-sadj" and len(sys.argv): sadj = int(sys.argv.pop(0))
         elif tok=="-p_any" and len(sys.argv): p_any = float(sys.argv.pop(0))
-        elif tok=="-s_any" and len(sys.argv): str_any = sys.argv.pop(0)
+        elif tok=="-s_any" and len(sys.argv): s_any = sys.argv.pop(0)
         elif tok=="-seed" and len(sys.argv): seed = int(sys.argv.pop(0))
         elif tok=="-rnd": frq_or_rnd = False
         elif tok=="-ling": ling = True
@@ -257,7 +257,7 @@ if __name__ == '__main__':
     if fm is not None:
         with open(fm, 'rb') as f: 
             Mod  = pickle.load(f)
-            Mod.inference(fi,p_any,str_any,ling)
+            Mod.inference(fi,p_any,s_any,ling)
     else:
         Mod = Model(fi,snoun,sverb,sadj,frq_or_rnd)
         if frq_or_rnd:

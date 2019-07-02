@@ -15,183 +15,117 @@ def addTags(lines, t):
             olines.append(myline)
     return olines
 
-def genTags(word, tags, do, ndiff, verbose):
+def getTag(tag):
+    i = tag.find(':')
+    name = tag[1:i]
+    val = tag[i+1:-1]
+    #print (tag,name,val)
+    return name, val, val.islower()
+
+def genTags(tags, snoun, sverb, sadj, mood, tense, ndiff, originals, verbose):
     lines = [[]]
     for tag in tags:
-        if verbose: sys.stdout.write('curr tag is {}\n'.format(tag))
+        name, val, is_lowercase = getTag(tag)
 
-        if tag.startswith('<det:'):
-            if verbose: sys.stdout.write('adding det\n')
+        if verbose: sys.stdout.write('curr tag is {} value is {} is_lowercase is {}\n'.format(name, val, is_lowercase))
+
+        if name == 'noun':
             t = []
             t.append(tag)
-            if "det" in do:
-                t.append('<det:A>')
-                t.append('<det:D>')
-                t.append('<det:I>')
-                t.append('<det:P>')
-                #t.append('<det:E>')
-                #t.append('<det:T>')
+            if val.lower() != 'x':
+                if verbose: sys.stdout.write('generating noun {}\n'.format(val))
+                for s in range(snoun):
+                    if is_lowercase:
+                        k = chr(ord('a') + s)
+                    else:
+                        k = chr(ord('A') + s)
+                    t.append('<noun:'+k+'>')
             lines = addTags(lines, t)
 
-        if tag.startswith('<fadj:'):
-            if verbose: sys.stdout.write('adding fadj\n')
+        elif name == 'verb':
             t = []
             t.append(tag)
-            if "fadj" in do:
-                t.append('<fadj:A>')
-                t.append('<fadj:B>')
-                t.append('<fadj:C>')
+            if val.lower() != 'x':
+                if verbose: sys.stdout.write('generating verb {}\n'.format(val))
+                for s in range(sverb):
+                    if is_lowercase:
+                        k = chr(ord('a') + s)
+                    else:
+                        k = chr(ord('A') + s)
+                    t.append('<verb:'+k+'>')
             lines = addTags(lines, t)
 
-        if tag.startswith('<fnoun:'):
-            if verbose: sys.stdout.write('adding fnoun\n')
+        elif name == 'adj':
             t = []
             t.append(tag)
-            if "fnoun" in do:
-                t.append('<fnoun:A>')
-                t.append('<fnoun:B>')
-                t.append('<fnoun:C>')
+            if val.lower() != 'x':
+                if verbose: sys.stdout.write('generating adj {}\n'.format(val))
+                for s in range(sadj):
+                    if is_lowercase:
+                        k = chr(ord('a') + s)
+                    else:
+                        k = chr(ord('A') + s)
+                    t.append('<adj:'+k+'>')
             lines = addTags(lines, t)
 
-        if tag.startswith('<fverb:'):
-            if verbose: sys.stdout.write('adding fverb\n')
+        elif name == 'mood':
             t = []
             t.append(tag)
-            if "fverb" in do:
-                t.append('<fverb:A>')
-                t.append('<fverb:B>')
-                t.append('<fverb:C>')
+            if val.lower() != 'x':
+                if verbose: sys.stdout.write('generating mood {}\n'.format(val))
+                if is_lowercase:
+                    t.append('<mood:i>')
+                    t.append('<mood:s>')
+                    t.append('<mood:m>')
+                    t.append('<mood:p>')
+                    t.append('<mood:g>')
+                    t.append('<mood:n>')
+                else:
+                    t.append('<mood:I>')
+                    t.append('<mood:S>')
+                    t.append('<mood:M>')
+                    t.append('<mood:P>')
+                    t.append('<mood:G>')
+                    t.append('<mood:N>')
             lines = addTags(lines, t)
 
-        if tag.startswith('<ladj:'):
-            if verbose: sys.stdout.write('adding ladj\n')
+        elif name == 'tense':
+            if verbose: sys.stdout.write('generating tense {}\n'.format(val))
             t = []
             t.append(tag)
-            if "ladj" in do:
-                t.append('<ladj:A>')
-                t.append('<ladj:B>')
-                t.append('<ladj:C>')
+            if val.lower() != 'x':
+                if is_lowercase:
+                    t.append('<tense:p>')
+                    t.append('<tense:i>')
+                    t.append('<tense:f>')
+                    t.append('<tense:s>')
+                    t.append('<tense:c>')
+                else:
+                    t.append('<tense:P>')
+                    t.append('<tense:I>')
+                    t.append('<tense:F>')
+                    t.append('<tense:S>')
+                    t.append('<tense:C>')
             lines = addTags(lines, t)
 
-        if tag.startswith('<lnoun:'):
-            if verbose: sys.stdout.write('adding lnoun\n')
-            t = []
-            t.append(tag)
-            if "lnoun" in do:
-                t.append('<lnoun:A>')
-                t.append('<lnoun:B>')
-                t.append('<lnoun:C>')
-            lines = addTags(lines, t)
+        else:
+            sys.stderr.write('warning: unkown tag {}\n'.format(tag))
+           
+    initial = lines.pop(0) ### get rid of the original sequence of tags
+    if verbose: sys.stdout.write('#different tag-sets = {}\n'.format(len(lines)))
 
-        if tag.startswith('<lverb:'):
-            if verbose: sys.stdout.write('adding lverb\n')
-            t = []
-            t.append(tag)
-            if "lverb" in do:
-                t.append('<lverb:A>')
-                t.append('<lverb:B>')
-                t.append('<lverb:C>')
-            lines = addTags(lines, t)
+    list_tags = []
+    for line in lines:
+        list_tags.append(' '.join(line))
 
-        if tag.startswith('<radj:'):
-            if verbose: sys.stdout.write('adding radj\n')
-            t = []
-            t.append(tag)
-            if "radj" in do:
-                t.append('<radj:A>')
-                t.append('<radj:B>')
-                t.append('<radj:C>')
-            lines = addTags(lines, t)
+    if ndiff > 0 and len(list_tags) > ndiff: 
+        random.shuffle(list_tags) ### shuffles list_tags
+        list_tags = list_tags[:ndiff] ### get ndiff sequences of tags
 
-        if tag.startswith('<rnoun:'):
-            if verbose: sys.stdout.write('adding rnoun\n')
-            t = []
-            t.append(tag)
-            if "rnoun" in do:
-                t.append('<rnoun:A>')
-                t.append('<rnoun:B>')
-                t.append('<rnoun:C>')
-            lines = addTags(lines, t)
-
-        if tag.startswith('<rverb:'):
-            if verbose: sys.stdout.write('adding rverb\n')
-            t = []
-            t.append(tag)
-            if "rverb" in do:
-                t.append('<rverb:A>')
-                t.append('<rverb:B>')
-                t.append('<rverb:C>')
-            lines = addTags(lines, t)
-
-        if tag.startswith('<length:'):
-            if verbose: sys.stdout.write('adding length\n')
-            t = []
-            t.append(tag)
-            if "length" in do:
-                t.append('<length:XL>')
-                t.append('<length:L>')
-                t.append('<length:M>')
-                t.append('<length:S>')
-                t.append('<length:XS>')
-            lines = addTags(lines, t)
-
-        if tag.startswith('<vmood:'):
-            if verbose: sys.stdout.write('adding vmood\n')
-            t = []
-            t.append(tag)
-            if "vmood" in do:
-                t.append('<vmood:I>') #indicative
-                t.append('<vmood:S>') #subjunctive
-                t.append('<vmood:M>') #imperative
-                #t.append('<vmood:P>') #participle
-                #t.append('<vmood:G>') #gerund
-                #t.append('<vmood:N>') #infinitive
-            lines = addTags(lines, t)
-
-        if tag.startswith('<vnumber:'):
-            if verbose: sys.stdout.write('adding vnumber\n')
-            t = []
-            t.append(tag)
-            if "vnumber" in do:
-                t.append('<vnumber:S>')
-                t.append('<vnumber:P>')
-            lines = addTags(lines, t)
-
-        if tag.startswith('<vperson:'):
-            if verbose: sys.stdout.write('adding vperson\n')
-            t = []
-            t.append(tag)
-            if "vperson" in do:
-                t.append('<vperson:1>')
-                t.append('<vperson:2>')
-                t.append('<vperson:3>')
-            lines = addTags(lines, t)
-
-        if tag.startswith('<vtense:'):
-            if verbose: sys.stdout.write('adding vtense\n')
-            t = []
-            t.append(tag)
-            if "vtense" in do:
-                t.append('<vtense:F>') #future
-                t.append('<vtense:P>') #present
-                t.append('<vtense:S>') #past
-                #t.append('<vtense:C>') #conditional
-                #t.append('<vtense:I>') #imperfect
-            lines = addTags(lines, t)
-
-    ### add sentence after tags
-    t = []
-    t.append(' '.join(word))
-    lines = addTags(lines,t)
-    if len(lines) == 1:
-        return lines, True
-
-    initial = lines.pop(0)
-    random.shuffle(lines) ### shuffles lines
-    if ndiff>0:
-        lines = lines[:ndiff]
-
-    return lines, False
+    if originals:
+        list_tags.insert(0,' '.join(initial)) #### if used the original is always in the first position
+ 
+    return list_tags
 
 def splitline(line, verbose):
     word = []
@@ -211,32 +145,50 @@ def splitline(line, verbose):
 if __name__ == '__main__':
 
     name = sys.argv.pop(0)
-    usage = '''usage: {} -do LIST -o FILE -n INT [-rep] [-v] < file_with_tags_and_words
-   -do LIST : comma-separated list of features (Ex: det,fadj,fnoun,fverb,ladj,lnoun,lverb,radj,rnoun,rverb,length,vmood,vnumber,vperson,vtense)
-   -o  FILE : output files will be FILE and FILE.i
-   -n   INT : consider INT tag sets for each sentence (default 0:all)
-   -rep     : allow repeated sentences (default False)
+    usage = '''usage: {} -snoun INT -sverb INT -sadj INT -o FILE [-v] < file_with_tags_and_words
+   -snoun INT : number of noun sets (default 0)
+   -sverb INT : number of verb sets (default 0)
+   -sadj  INT : number of adjective sets (default 0)
+   -mood      : generate mood values (default False)
+   -tense     : generate tense values (default False)
+   -ndiff INT : number of generated lists of tags per sentence (default 0:all)
+                if tags can be generated returns [INT] random sequences of tags
+                a tag cannot be generated if its original form is 'x' or 'X'
+   -originals : include the tags of the original sentence (default False)
+   -o  FILE : output files will be FILE.desc and FILE.i
    -v       : verbose output (default False)
 '''.format(name)
     
-    rep = False
-    do = []
+    snoun = 0
+    sverb = 0
+    sadj = 0
+    mood = False
+    tense = False
     ofile = None
-    verbose = False
     ndiff = 0
+    originals = False
+    verbose = False
     while len(sys.argv):
         tok = sys.argv.pop(0)
         if tok=="-h":
             sys.stderr.write("{}".format(usage))
             sys.exit()
-        elif tok=="-do" and len(sys.argv):
-            do = sys.argv.pop(0).split(",")
+        elif tok=="-snoun" and len(sys.argv):
+            snoun = int(sys.argv.pop(0))
+        elif tok=="-sverb" and len(sys.argv):
+            sverb = int(sys.argv.pop(0))
+        elif tok=="-sadj" and len(sys.argv):
+            sadj = int(sys.argv.pop(0))
         elif tok=="-o" and len(sys.argv):
             ofile = sys.argv.pop(0)
-        elif tok=="-n" and len(sys.argv):
+        elif tok=="-ndiff" and len(sys.argv):
             ndiff = int(sys.argv.pop(0))
-        elif tok=="-rep":
-            rep = True
+        elif tok=="-mood":
+            mood = True
+        elif tok=="-tense":
+            tense = True
+        elif tok=="-originals":
+            originals = True
         elif tok=="-v":
             verbose = True
         else:
@@ -244,28 +196,29 @@ if __name__ == '__main__':
             sys.stderr.write("{}".format(usage))
             sys.exit()
 
-    if len(do) == 0:
-        sys.stderr.write('error: -do option must be set\n')
-        sys.stderr.write("{}".format(usage))
-        sys.exit()
-
     if ofile == None:
-        sys.stderr.write('error: -do option must be set\n')
+        sys.stderr.write('error: -o option must be set\n')
         sys.stderr.write("{}".format(usage))
-        sys.exit()
+        sys.exit()    
+
+    desc = ""
+    if snoun: desc = desc + ".snoun{}".format(snoun)
+    if sverb: desc = desc + ".sverb{}".format(sverb)
+    if sadj: desc = desc + ".sadj{}".format(sadj)
+    if mood: desc = desc + ".mood"
+    if tense: desc = desc + ".tense"
+    if originals: desc = desc + ".originals"
+    desc = desc + ".ndiff{}".format(ndiff)
+    ofile = ofile+desc
 
     if os.path.exists(ofile):
-        sys.stderr.write('error: file already exist: {}\n'.format(ofile))
+        sys.stderr.write('error: file already exists: {}\n'.format(ofile))
         sys.stderr.write("{}".format(usage))
         sys.exit()
-    
 
     ff = open(ofile, "w")
     fi = open(ofile+".i", "w")
     N = defaultdict(int)
-#    olines = defaultdict(int)
-#    nrep = 0
-    n_original = 0
     for nline, strline in enumerate(sys.stdin):
         if (nline+1)%10000 == 0:
             if (nline+1)%100000 == 0:
@@ -274,17 +227,11 @@ if __name__ == '__main__':
                 sys.stderr.write(".")
 
         strline = strline.rstrip()
-        word, tags = splitline(strline, verbose)
+        words, tags = splitline(strline, verbose)
         n = 0
-        lines, is_original = genTags(word, tags, do, ndiff, verbose)
-        if is_original: n_original += 1
-        for line in lines:
-            strline = ' '.join(line)
-#            if not rep and strline in olines: 
-#                nrep += 1
-#                continue
-#            olines[strline] += 1
-            ff.write(strline+"\n")
+        list_tags = genTags(tags, snoun, sverb, sadj, mood, tense, ndiff, originals, verbose)
+        for tags in list_tags:
+            ff.write(tags+' '+' '.join(words)+"\n")
             fi.write(str(nline+1)+"\n")
             ff.flush()
             fi.flush()
@@ -293,6 +240,6 @@ if __name__ == '__main__':
     ff.close()
     fi.close()
 
-    sys.stderr.write("({} sentences {} original)\n".format(nline+1, n_original))
+    sys.stderr.write("(read {} sentences)\n".format(nline+1))
     for n in sorted(N):
         sys.stderr.write("{}\t{}\n".format(n,N[n]))
