@@ -201,19 +201,16 @@ if __name__ == '__main__':
         sys.stderr.write("{}".format(usage))
         sys.exit()    
 
-    desc = ""
-    if snoun: desc = desc + ".snoun{}".format(snoun)
-    if sverb: desc = desc + ".sverb{}".format(sverb)
-    if sadj: desc = desc + ".sadj{}".format(sadj)
-    if mood: desc = desc + ".mood"
-    if tense: desc = desc + ".tense"
-    if originals: desc = desc + ".originals"
-    desc = desc + ".ndiff{}".format(ndiff)
-    ofile = ofile+desc
+    if snoun: ofile = ofile + ".snoun{}".format(snoun)
+    if sverb: ofile = ofile + ".sverb{}".format(sverb)
+    if sadj: ofile = ofile + ".sadj{}".format(sadj)
+    if mood: ofile = ofile + ".mood"
+    if tense: ofile = ofile + ".tense"
+    if originals: ofile = ofile + ".originals"
+    ofile = ofile + ".ndiff{}".format(ndiff)
 
     if os.path.exists(ofile):
         sys.stderr.write('error: file already exists: {}\n'.format(ofile))
-        sys.stderr.write("{}".format(usage))
         sys.exit()
 
     ff = open(ofile, "w")
