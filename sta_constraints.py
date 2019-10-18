@@ -43,8 +43,6 @@ class sta():
         return
 
     def valid_alignment(self, s):
-        if s >= len(self.s2t):
-            return -1
         if len(self.s2t[s]) != 1: ### a single link pointing to t
             return -1
         t = list(self.s2t[s])[0]
@@ -116,7 +114,7 @@ class sta():
             self.N['R'] += 1
 
             if random.random() < self.opts['pLem']: ### generates random float [0.0, 1.0)
-                vsrc.append(tlem + self.sep + 'L') ### tlem may be lexically equal to twrd
+                vsrc.append(tlem + self.sep + 'L') ### tlem may be equal to twrd
                 self.N['L'] += 1
             else:
                 vsrc.append(twrd + self.sep + 'W')
@@ -135,9 +133,6 @@ class sta():
 
         if not self.ok:
             return vsrc
-
-        if self.verbose:
-            print("===== SRC: {}\n===== TGT: {}".format(' '.join(self.vs), ' '.join(self.vt)))
 
         for s in range(len(self.vs)):
             swrd, spos, slem = self.token_features(self.vs[s])
@@ -231,6 +226,7 @@ Optional:
    -mode STRING : available modes are: append, person, tense, mood, rnd, frq (default append)
    -tags STRING : pairs of src/tgt valid tags (default: \'V-VM N-NC J-AQ\')
    -many-to-one : consider many-to-one alignments rather than one-to-one (default not used)
+   -pInj  FLOAT : probability to inject terminology given a valid word in append mode (default 0.5)
    -pLem  FLOAT : probability to use lemma rather than word form in append mode (default 0.5)
 Other:
    -maxl    INT : consider the first INT lines (default 0: all)
@@ -249,6 +245,7 @@ Other:
     opts['tags'] = [['V','VM'], ['N','NC'], ['J','AQ']]
     opts['many_to_one'] = False
     opts['pLem'] = 0.5
+    opts['pInj'] = 0.5
 
     while len(sys.argv):
         tok = sys.argv.pop(0)
@@ -274,6 +271,8 @@ Other:
             opts['many_to_one'] = True
         elif tok=="-pLem" and len(sys.argv):
             opts['pLem'] = float(sys.argv.pop(0))
+        elif tok=="-pInj" and len(sys.argv):
+            opts['pInj'] = float(sys.argv.pop(0))
         else:
             sys.stderr.write('error: unparsed {} option\n'.format(tok))
             sys.stderr.write("{}".format(usage))
