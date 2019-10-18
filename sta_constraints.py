@@ -3,7 +3,7 @@
 from collections import defaultdict
 import random
 import sys
-import yaml
+import json
 
 def progress(n):
     if n%10000 == 0:
@@ -77,7 +77,7 @@ class sta():
         total = 0
         for k, v in self.N.iteritems():
             total += v
-        return yaml.dump(dict(self.N), default_flow_style=True)
+        return json.dumps(self.N, indent=4)
         
     def run(self, nline):
         if self.opts['mode'] == 'append':
